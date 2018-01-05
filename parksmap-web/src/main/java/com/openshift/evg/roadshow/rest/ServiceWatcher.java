@@ -11,6 +11,7 @@ import io.fabric8.kubernetes.client.Watch;
 
 @Component
 public class ServiceWatcher extends AbstractResourceWatcher<Service> {
+
 	private static final Logger logger = LoggerFactory.getLogger(ServiceWatcher.class);
 
 	private static final String PARKSMAP_BACKEND_LABEL = "type=parksmap-backend";
