@@ -30,7 +30,7 @@ node('maven') {
   }
  } 
 
-/ Convenience Functions to read variables from the pom.xml
+// Convenience Functions to read variables from the pom.xml
 
  def getVersionFromPom(pom) {
   def matcher = readFile(pom) =~ '<version>(.+)</version>'
