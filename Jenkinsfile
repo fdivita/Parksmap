@@ -25,7 +25,7 @@ node('maven') {
   stage('Build parksmap-web war') {
     echo "Building version ${version}"
 
-    sh "cd ${parksmap}" 
+    sh "cd parksmap-web" 
     sh "${mvnCmd} clean package -DskipTests"
   }
  } 
