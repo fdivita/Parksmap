@@ -1,3 +1,4 @@
+#!groovy
 // Run this node on a Maven Slave
 // Maven Slaves have JDK and Maven already installed
 node('maven') {
@@ -28,7 +29,8 @@ node('maven') {
     sh "cd parksmap-web" 
     sh "${mvnCmd} clean package -DskipTests"
   }
- } 
+}
+ 
 
 // Convenience Functions to read variables from the pom.xml
 
