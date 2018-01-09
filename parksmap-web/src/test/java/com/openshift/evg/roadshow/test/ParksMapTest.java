@@ -21,7 +21,6 @@ import org.junit.Test;
 import com.openshift.evg.roadshow.rest.*;
 import com.openshift.evg.roadshow.rest.gateway.model.*;
 
-import junit.framework.Assert;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(BackendsController.class)
@@ -54,8 +53,16 @@ public class ParksMapTest{
 		
 		Coordinates coordinates = new Coordinates("45","45");
 		assertEquals("45", coordinates.getLongitude());
-		
-		
+	}
+	
+	
+	@Test
+	//Test BackendsController get to localhost:8080/ws/backends/list
+	public void test3() throws Exception {
+		RequestBuilder requestBuilder = MockMvcRequestBuilders.get(
+				"/ws/backends/list");
+		MvcResult result = mockMvc.perform(requestBuilder).andExpect(status().isOk()).andReturn();
+		System.out.println("RESPONSE"+result.getResponse());
 	}
 
 }
