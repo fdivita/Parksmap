@@ -2,9 +2,9 @@
 <settings>
   <mirrors>
     <mirror>
-      <id>Nexus</id>
+      <id>nexus</id>
       <name>Nexus Public Mirror</name>
-      <url>http://nexus3-nexus.192.168.99.100.nip.io/repository/maven-all-public/</url>
+      <url>http://http://nexus3-nexus.192.168.99.106.nip.iorepository/maven-all-public/</url>
       <mirrorOf>*</mirrorOf>
     </mirror>
   </mirrors>
