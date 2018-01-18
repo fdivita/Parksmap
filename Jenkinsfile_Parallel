@@ -102,7 +102,7 @@ def active = ""
 stage('Deploy to Pre-Production with Blue/Green ') {
     
     sh "oc project production"
-    sh "oc get route tasks -n production -o jsonpath='{ .spec.to.name }' > activesvc.txt"
+    sh "oc get route parksmap-web -n production -o jsonpath='{ .spec.to.name }' > activesvc.txt"
     active = readFile('activesvc.txt').trim()
     if (active == "parksmap-green") {
       dest = "parksmap-blue"
@@ -126,7 +126,16 @@ stage('Deploy new Version') {
   }
 
 
+stage('Switch over to new Version') {
+    input "Switch Production?"
 
+    // Replace xyz-tasks-prod with the name of your
+    // production project
+    sh 'oc patch route parksmap-web -n production -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
+    sh 'oc get route tasks -n production > oc_out.txt'
+    oc_out = readFile('oc_out.txt')
+    echo "Current route configuration: " + oc_out
+  }
 
 
 
