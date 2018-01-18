@@ -91,8 +91,7 @@ node('maven') {
     echo "New Tag: ${newTag}"
     
     sh "oc project test"
-    sh "wget http://nexus3-nexus.192.168.99.106.nip.io/repository/releases/com/openshift/evg/roadshow/parksmap-web/1.0.0-RELEASE/parksmap-web-1.0.0-RELEASE.jar"
-    sh "oc start-build parksmap-web --follow --from-file=./parksmap-web-1.0.0-RELEASE.jar -n test"
+    sh "oc start-build parksmap-web --follow --from-file=./ROOT.jar -n test"
     openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
 
   }
