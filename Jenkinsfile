@@ -66,7 +66,7 @@ node('maven') {
     // Patch the DeploymentConfig so that it points to the latest TestingCandidate-${version} Image.
     
     sh "oc project development"
-   sh "oc patch dc parksmap-web --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"parksmap-web\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"parksmap-web:Test-Ready-$parksmapversion\"}}}]}}' -n development"
+   sh "oc patch dc parksmap-web --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"parksmap-web\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"parksmap-web:TestingCandidate-$parksmapversion\"}}}]}}' -n development"
 
     openshiftDeploy depCfg: 'parksmap-web', namespace: 'development', verbose: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyDeployment depCfg: 'parksmap-web', namespace: 'development', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
