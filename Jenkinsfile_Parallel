@@ -55,7 +55,7 @@ node('maven') {
         echo "Publish to Nexus"
 
         // Replace xyz-nexus with the name of your project
-        sh "cd ${parksmap}; ${parksmapMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.192.168.99.100.nip.io/repository/releases"
+        sh "cd ${parksmap}; ${parksmapMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.192.168.99.106.nip.io/repository/releases"
     }
 
     stage('Build OpenShift Image') {
