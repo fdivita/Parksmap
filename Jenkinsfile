@@ -37,7 +37,7 @@ node('maven') {
     
     stage('Code Analysis') {
         echo "Code Analysis"
-        sh "cd ${parksmap}; ${parksmapMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-xyz-sonarqube.192.168.99.100.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"
+        sh "cd ${parksmap}; ${parksmapMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-xyz-sonarqube.192.168.99.106.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"
     } 
 
     stage('Publish to Nexus') {
