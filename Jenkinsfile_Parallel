@@ -8,7 +8,7 @@ node('maven') {
   def parksmapMvnCmd       = "mvn -s ./nexus_openshift_settings.xml"
   def parksmap = "parksmap-web"
 
-  stage('Checkout Source') {
+  stage('Checkout Source Code') {
     // Get Source Code from SCM (Git) as configured in the Jenkins Project
     // Next line for inline script, "checkout scm" for Jenkinsfile from Gogs
     //git 'http://gogs-xyz-gogs.192.168.99.100.nip.io/CICDLabs/ParksMap.git'
@@ -58,7 +58,7 @@ node('maven') {
         sh "cd ${parksmap}; ${parksmapMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.192.168.99.106.nip.io/repository/releases"
     }
 
-    stage('Build OpenShift Image') {
+    stage('Build OpenShift Image in development ') {
         def newTag = "TestReady-${parksmapversion}"
         echo "New Tag: ${newTag}"
 
@@ -73,7 +73,7 @@ node('maven') {
         openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'development', namespace: 'development', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
     }
 
-    stage('Deploy to Dev') {
+    stage('Deploy to Development') {
     // Patch the DeploymentConfig so that it points to the latest TestingCandidate-${version} Image.
     
     sh "oc project development"
@@ -132,7 +132,7 @@ stage('Switch over to new Version') {
     // Replace xyz-tasks-prod with the name of your
     // production project
     sh 'oc patch route parksmap-web -n production -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
-    sh 'oc get route tasks -n production > oc_out.txt'
+    sh 'oc get route parksmap-web -n production > oc_out.txt'
     oc_out = readFile('oc_out.txt')
     echo "Current route configuration: " + oc_out
   }
