@@ -77,7 +77,7 @@ node('maven') {
     // Patch the DeploymentConfig so that it points to the latest TestingCandidate-${version} Image.
     
     sh "oc project development"
-   sh "oc patch dc parksmap-web --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"parksmap-web\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"parksmap-web:TestReady-$parksmapversion\"}}}]}}' -n development"
+    sh "oc patch dc parksmap-web --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"parksmap-web\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"parksmap-web:TestReady-$parksmapversion\"}}}]}}' -n development"
 
     openshiftDeploy depCfg: 'parksmap-web', namespace: 'development', verbose: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyDeployment depCfg: 'parksmap-web', namespace: 'development', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
@@ -89,10 +89,25 @@ node('maven') {
     //if ok allora tag Prod Ready
     def newTag = "ProdReady-${version}"
     echo "New Tag: ${newTag}"
+    
+    sh "oc project test"
+    
+    sh "oc start-build parksmap-web --follow --from-archive=http://nexus3-nexus.192.168.99.106.nip.io/repository/releases/com/openshift/evg/roadshow/parksmap-web/1.0.0-RELEASE/parksmap-web-1.0.0-RELEASE.jar -n test
+"
     openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
+
   }
 
+stage('Deploy to Test') {
+    // Patch the DeploymentConfig so that it points to the latest TestingCandidate-${version} Image.
+    
+    sh "oc project test"
+    sh "oc patch dc parksmap-web --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"parksmap-web\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"parksmap-web:ProdReady-$parksmapversion\"}}}]}}' -n development"
 
+    openshiftDeploy depCfg: 'parksmap-web', namespace: 'test', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyDeployment depCfg: 'parksmap-web', namespace: 'test', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyService namespace: 'test', svcName: 'parksmap-web', verbose: 'false'
+  }
 
 }
 
