@@ -96,6 +96,8 @@ node('maven') {
 
   }
 
+def dest   = "tasks-green"
+def active = ""
 stage('Deploy to Pre-Production with Blue/Green ') {
     
     sh "oc project production"
