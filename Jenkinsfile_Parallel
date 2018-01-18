@@ -97,7 +97,7 @@ node('maven') {
   }
 
 
-def dest   = "tasks-green"
+def dest   = "parksmap-green"
 def active = ""
 stage('Deploy to Pre-Production with Blue/Green ') {
     
