@@ -96,16 +96,38 @@ node('maven') {
 
   }
 
-stage('Deploy to Test') {
-    // Patch the DeploymentConfig so that it points to the latest TestingCandidate-${version} Image.
+stage('Deploy to Pre-Production with Blue/Green ') {
     
-    sh "oc project test"
-    sh "oc patch dc parksmap-web --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"parksmap-web\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"parksmap-web:ProdReady-$parksmapversion\"}}}]}}' -n test"
+    sh "oc project production"
+    sh "oc get route tasks -n production -o jsonpath='{ .spec.to.name }' > activesvc.txt"
+    active = readFile('activesvc.txt').trim()
+    if (active == "parksmap-green") {
+      dest = "parksmap-blue"
+    }
+    echo "Active svc: " + active
+    echo "Dest svc:   " + dest
 
-    openshiftDeploy depCfg: 'parksmap-web', namespace: 'test', verbose: 'false', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyDeployment depCfg: 'parksmap-web', namespace: 'test', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyService namespace: 'test', svcName: 'parksmap-web', verbose: 'false'
+}
+
+stage('Deploy new Version') {
+    echo "Deploying to ${dest}"
+
+    // Patch the DeploymentConfig so that it points to
+    // the latest ProdReady-${version} Image.
+    
+    sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"parksmap-web:ProdReady-$version\"}}}]}}' -n production"
+
+    openshiftDeploy depCfg: dest, namespace: 'produciton', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyDeployment depCfg: dest, namespace: 'produciton'', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyService namespace: 'production', svcName: dest, verbose: 'false'
   }
+
+
+
+
+
+
+
 
 }
 
