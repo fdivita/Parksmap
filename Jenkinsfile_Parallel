@@ -89,7 +89,7 @@ node('maven') {
     //if ok allora tag Prod Ready
     def newTag = "ProdReady-${version}"
     echo "New Tag: ${newTag}"
-    openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: ‘test', namespace: ‘test', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
+    openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test', namespace: ‘test', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
   }
 
 
