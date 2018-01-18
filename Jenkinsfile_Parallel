@@ -38,7 +38,7 @@ node('maven') {
                 echo "Unit Tests"
                 sh "cd ${parksmap}; ${parksmapMvnCmd} test"    
 
-            }
+            },
             'Code Analysis': {
                 echo "Code Analysis"
                 sh "cd ${parksmap}; ${parksmapMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-xyz-sonarqube.192.168.99.100.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"   
