@@ -66,7 +66,7 @@ node('maven') {
         sh "cd ${parksmap};cp ./target/parksmap-web.jar ./ROOT.jar"
 
         // Start Binary Build in OpenShift using the file we just published
-        // Replace xyz-tasks-dev with the name of your dev project
+        
         sh "oc project development"
         sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n development"
 
@@ -91,8 +91,8 @@ node('maven') {
     echo "New Tag: ${newTag}"
     
     sh "oc project test"
-    
-    sh "oc start-build parksmap-web --follow --from-archive=http://nexus3-nexus.192.168.99.106.nip.io/repository/releases/com/openshift/evg/roadshow/parksmap-web/1.0.0-RELEASE/parksmap-web-1.0.0-RELEASE.jar -n test"
+    sh "wget http://nexus3-nexus.192.168.99.106.nip.io/repository/releases/com/openshift/evg/roadshow/parksmap-web/1.0.0-RELEASE/parksmap-web-1.0.0-RELEASE.jar"
+    sh "oc start-build parksmap-web --follow --from-file=./parksmap-web-1.0.0-RELEASE.jar -n test"
     openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
 
   }
