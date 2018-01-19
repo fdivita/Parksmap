@@ -25,10 +25,31 @@ node('maven') {
   //def artifactId = getArtifactIdFromPom("pom.xml")
   def version    = getVersionFromPom("nationalparks/pom.xml")
 
-  stage('Build parksmap-web jar') {
+  stage('Build nationalparks  jar') {
     echo "Building version ${version}" 
     sh "cd ${nationalparks}; ${nationalparksMvnCmd} clean package -DskipTests"
   }
+
+
+  stage('Tests and Code Analysis') {
+    
+      parallel (
+            'Unit Test': {
+                echo "Unit Tests"
+                sh "cd ${nationalparks}; ${nationalparksMvnCmd} test"    
+
+            },
+            'Code Analysis': {
+                echo "Code Analysis"
+                //PUT THE CORRECT SONARQUBE URL 
+                sh "cd ${nationalparks}; ${nationalparksMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.192.168.99.100.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"   
+
+            }
+
+      )
+    
+    }
+     
 }
 
 
