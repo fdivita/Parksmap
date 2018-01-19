@@ -86,7 +86,7 @@ node('maven') {
     stage('Integration Test') {
     // Integration test-------------
     //if ok allora tag Prod Ready
-    def newTag = "TestReady-${nationalparks}"
+    def newTag = "TestReady-${version}"
     echo "New Tag: ${newTag}"
     
     sh "oc project test"
