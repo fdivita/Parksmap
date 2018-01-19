@@ -46,9 +46,31 @@ node('maven') {
 
             }
 
-      )
-    
+      
     }
+
+    stage('Publish to Nexus') {
+        echo "Publish to Nexus"
+
+        // Replace correct nexus url 
+        sh "cd ${nationalparks}; ${nationalparksMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.192.168.99.100.nip.io/repository/releases"
+    }
+
+    stage('Build OpenShift Image in development ') {
+        def newTag = "TestReady-${version}"
+        echo "New Tag: ${newTag}"
+
+        // Copy the jar file we just built and rename to jar.war
+        sh "cd ${nationalparks};cp ./target/nationalparks.jar ./ROOT.jar"
+
+        // Start Binary Build in OpenShift using the file we just published
+        
+        sh "oc project development"
+        sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n development"
+
+        openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'development', namespace: 'development', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
+    }
+
      
 }
 
