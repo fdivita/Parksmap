@@ -45,7 +45,7 @@ node('maven') {
                 sh "cd ${nationalparks}; ${nationalparksMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.192.168.99.100.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"   
 
             }
-
+      )
       
     }
 
