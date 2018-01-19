@@ -88,18 +88,23 @@ node('maven') {
   stage('Integration Test') {
     // Integration test-------------
     //if ok allora tag Prod Ready
-    def newTag = "ProdReady-${parksmapversion}"
+    def newTag = "TestReady-${parksmapversion}"
     echo "New Tag: ${newTag}"
     
     sh "oc project test"
     sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n test"
     
+    openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
 
+    
     
     openshiftDeploy depCfg: 'parksmap-web', namespace: 'test', verbose: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyDeployment depCfg: 'parksmap-web', namespace: 'test', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyService namespace: 'test', svcName: 'parksmap-web', verbose: 'false'
 
+
+    newTag = "ProdReady-${parksmapversion}"
+    echo "New Tag: ${newTag}"
     openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
 
 
