@@ -83,6 +83,8 @@ node('maven') {
     openshiftVerifyService namespace: 'development', svcName: 'nationalparks', verbose: 'false'
     }
 
+
+
     stage('Integration Test') {
     // Integration test-------------
     //if ok allora tag Prod Ready
@@ -93,7 +95,7 @@ node('maven') {
     sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n test"
     openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
 
-    sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"nationalparks:TestReady-$version\"}}}]}}' -n development"
+    sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"nationalparks:TestReady-$version\"}}}]}}' -n test"
 
 
 
