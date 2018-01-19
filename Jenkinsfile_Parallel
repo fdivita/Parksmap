@@ -100,7 +100,6 @@ node('maven') {
     openshiftDeploy depCfg: 'parksmap-web', namespace: 'test', verbose: 'false', waitTime: '', waitUnit: 'sec'
   openshiftVerifyDeployment depCfg: 'parksmap-web', namespace: 'test', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyService namespace: 'test', svcName: 'parksmap-web', verbose: 'false'
-    openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
 
   }
 
