@@ -23,10 +23,10 @@ node('maven') {
   // Extract version and other properties from the pom.xml
   //def groupId    = getGroupIdFromPom("pom.xml")
   //def artifactId = getArtifactIdFromPom("pom.xml")
-  def nationalparksversion    = getVersionFromPom("nationalparks/pom.xml")
+  def version    = getVersionFromPom("nationalparks/pom.xml")
 
   stage('Build parksmap-web jar') {
-    echo "Building version ${parksmapversion}" 
+    echo "Building version ${version}" 
     sh "cd ${nationalparks}; ${nationalparksMvnCmd} clean package -DskipTests"
   }
 }
