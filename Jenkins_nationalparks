@@ -76,7 +76,7 @@ node('maven') {
     // Patch the DeploymentConfig so that it points to the latest TestingCandidate-${version} Image.
     
     sh "oc project development"
-    sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"nationalparks:TestReady-$version\"}}}]}}' -n development"
+    sh "oc patch dc  nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"nationalparks:TestReady-$version\"}}}]}}' -n development"
 
     openshiftDeploy depCfg: 'nationalparks', namespace: 'development', verbose: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyDeployment depCfg: 'nationalparks', namespace: 'development', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
