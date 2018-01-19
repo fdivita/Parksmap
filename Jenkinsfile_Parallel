@@ -25,7 +25,7 @@ node('maven') {
   //def artifactId = getArtifactIdFromPom("pom.xml")
   def parksmapversion    = getVersionFromPom("parksmap-web/pom.xml")
 
-  stage('Build parksmap-web war') {
+  stage('Build parksmap-web jar') {
     echo "Building version ${parksmapversion}" 
     sh "cd ${parksmap}; ${parksmapMvnCmd} clean package -DskipTests"
   }
@@ -41,7 +41,8 @@ node('maven') {
             },
             'Code Analysis': {
                 echo "Code Analysis"
-                sh "cd ${parksmap}; ${parksmapMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.192.168.99.106.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"   
+                //PUT THE CORRECT SONARQUBE URL 
+                sh "cd ${parksmap}; ${parksmapMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.192.168.99.100.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"   
 
             }
 
@@ -54,8 +55,8 @@ node('maven') {
     stage('Publish to Nexus') {
         echo "Publish to Nexus"
 
-        // Replace xyz-nexus with the name of your project
-        sh "cd ${parksmap}; ${parksmapMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.192.168.99.106.nip.io/repository/releases"
+        // Replace correct nexus url 
+        sh "cd ${parksmap}; ${parksmapMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.192.168.99.100.nip.io/repository/releases"
     }
 
     stage('Build OpenShift Image in development ') {
@@ -136,10 +137,6 @@ stage('Switch over to new Version') {
     oc_out = readFile('oc_out.txt')
     echo "Current route configuration: " + oc_out
   }
-
-
-
-
 
 }
 
