@@ -83,7 +83,17 @@ node('maven') {
     openshiftVerifyService namespace: 'development', svcName: 'nationalparks', verbose: 'false'
     }
 
+    stage('Integration Test') {
+    // Integration test-------------
+    //if ok allora tag Prod Ready call info 
+     def newTag = "ProdReady-${version}"
+    echo "New Tag: ${newTag}"
+    
+    sh "oc project test"
+    sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n test"
+    openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
 
+  }
      
 }
 
