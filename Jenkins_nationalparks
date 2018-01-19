@@ -68,8 +68,21 @@ node('maven') {
         sh "oc project development"
         sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n development"
 
-        openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'development', namespace: 'development', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
+        openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'development', namespace: 'development', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
     }
+
+
+  stage('Deploy to Development') {
+    // Patch the DeploymentConfig so that it points to the latest TestingCandidate-${version} Image.
+    
+    sh "oc project development"
+    sh "oc patch dc nationaparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"nationalparks:TestReady-$version\"}}}]}}' -n development"
+
+    openshiftDeploy depCfg: 'nationalparks', namespace: 'development', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyDeployment depCfg: 'nationalparks', namespace: 'development', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyService namespace: 'development', svcName: 'nationalparks', verbose: 'false'
+    }
+
 
      
 }
