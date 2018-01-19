@@ -85,13 +85,28 @@ node('maven') {
 
     stage('Integration Test') {
     // Integration test-------------
-    //if ok allora tag Prod Ready call info 
-     def newTag = "ProdReady-${version}"
+    //if ok allora tag Prod Ready
+    def newTag = "TestReady-${nationalparks}"
     echo "New Tag: ${newTag}"
     
     sh "oc project test"
     sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n test"
+    sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"nationalparks:TestReady-$parksmapversion\"}}}]}}' -n test"
+
+
     openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
+
+    
+    
+    openshiftDeploy depCfg: 'nationalparks', namespace: 'test', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyDeployment depCfg: 'nationalparks', namespace: 'test', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyService namespace: 'test', svcName: 'nationalparks', verbose: 'false'
+
+
+    newTag = "ProdReady-${nationalparks}"
+    echo "New Tag: ${newTag}"
+    openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
+
 
   }
      
