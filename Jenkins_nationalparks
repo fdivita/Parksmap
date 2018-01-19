@@ -91,7 +91,7 @@ node('maven') {
     
     sh "oc project test"
     sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n test"
-    sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"nationalparks:TestReady-$parksmapversion\"}}}]}}' -n test"
+    sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"nationalparks:TestReady-$version\"}}}]}}' -n test"
 
 
     openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
