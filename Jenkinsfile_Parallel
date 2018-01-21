@@ -103,7 +103,7 @@ node('maven') {
 
     
     
-    openshiftDeploy depCfg: 'parksmap-web', namespace: 'test-env, verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftDeploy depCfg: 'parksmap-web', namespace: 'test-env', verbose: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyDeployment depCfg: 'parksmap-web', namespace: 'test-env', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyService namespace: 'test-env', svcName: 'parksmap-web', verbose: 'false'
 
