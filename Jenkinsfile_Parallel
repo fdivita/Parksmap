@@ -42,7 +42,7 @@ node('maven') {
             'Code Analysis': {
                 echo "Code Analysis"
                 //PUT THE CORRECT SONARQUBE URL 
-                sh "cd ${parksmap}; ${parksmapMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.192.168.99.100.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"   
+                sh "cd ${parksmap}; ${parksmapMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.e4ff.pro-eu-west-1.openshiftapps.com  -Dsonar.projectName=${JOB_BASE_NAME}"   
 
             }
 
@@ -56,7 +56,7 @@ node('maven') {
         echo "Publish to Nexus"
 
         // Replace correct nexus url 
-        sh "cd ${parksmap}; ${parksmapMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.192.168.99.100.nip.io/repository/releases"
+        sh "cd ${parksmap}; ${parksmapMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.e4ff.pro-eu-west-1.openshiftapps.com/repository/releases"
     }
 
     stage('Build OpenShift Image in development ') {
@@ -94,23 +94,23 @@ node('maven') {
     def newTag = "TestReady-${parksmapversion}"
     echo "New Tag: ${newTag}"
     
-    sh "oc project test"
-    sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n test"
+    sh "oc project test-env"
+    sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n test-env"
     sh "oc patch dc parksmap-web --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"parksmap-web\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"parksmap-web:TestReady-$parksmapversion\"}}}]}}' -n test"
 
 
-    openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
+    openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
 
     
     
-    openshiftDeploy depCfg: 'parksmap-web', namespace: 'test', verbose: 'false', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyDeployment depCfg: 'parksmap-web', namespace: 'test', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyService namespace: 'test', svcName: 'parksmap-web', verbose: 'false'
+    openshiftDeploy depCfg: 'parksmap-web', namespace: 'test-env, verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyDeployment depCfg: 'parksmap-web', namespace: 'test-env', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyService namespace: 'test-env', svcName: 'parksmap-web', verbose: 'false'
 
 
     newTag = "ProdReady-${parksmapversion}"
     echo "New Tag: ${newTag}"
-    openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
+    openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
 
 
   }
@@ -120,8 +120,8 @@ def dest   = "parksmap-green"
 def active = ""
 stage('Deploy to Pre-Production with Blue/Green ') {
     
-    sh "oc project production"
-    sh "oc get route parksmap-web -n production -o jsonpath='{ .spec.to.name }' > activesvc.txt"
+    sh "oc project prod-env"
+    sh "oc get route parksmap-web -n prod-env -o jsonpath='{ .spec.to.name }' > activesvc.txt"
     active = readFile('activesvc.txt').trim()
     if (active == "parksmap-green") {
       dest = "parksmap-blue"
@@ -137,21 +137,20 @@ stage('Deploy new Version') {
     // Patch the DeploymentConfig so that it points to
     // the latest ProdReady-${version} Image.
     
-    sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"parksmap-web:ProdReady-$parksmapversion\"}}}]}}' -n production"
+    sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"parksmap-web:ProdReady-$parksmapversion\"}}}]}}' -n prod-env"
 
-    openshiftDeploy depCfg: dest, namespace: 'production', verbose: 'false', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyDeployment depCfg: dest, namespace: 'production', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyService namespace: 'production', svcName: dest, verbose: 'false'
+    openshiftDeploy depCfg: dest, namespace: 'prod-env', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyDeployment depCfg: dest, namespace: 'prod-env', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyService namespace: 'prod-env', svcName: dest, verbose: 'false'
   }
 
 
 stage('Switch over to new Version') {
     input "Switch Production?"
 
-    // Replace xyz-tasks-prod with the name of your
-    // production project
-    sh 'oc patch route parksmap-web -n production -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
-    sh 'oc get route parksmap-web -n production > oc_out.txt'
+    
+    sh 'oc patch route parksmap-web -n prod-env -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
+    sh 'oc get route parksmap-web -n prod-env > oc_out.txt'
     oc_out = readFile('oc_out.txt')
     echo "Current route configuration: " + oc_out
   }
