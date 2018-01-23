@@ -42,7 +42,7 @@ node('maven') {
             'Code Analysis': {
                 echo "Code Analysis"
                 //PUT THE CORRECT SONARQUBE URL 
-                sh "cd ${parksmap}; ${parksmapMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.e4ff.pro-eu-west-1.openshiftapps.com  -Dsonar.projectName=${JOB_BASE_NAME}"   
+                sh "cd ${parksmap}; ${parksmapMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.apps.35.229.52.249.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"   
 
             }
 
@@ -56,7 +56,7 @@ node('maven') {
         echo "Publish to Nexus"
 
         // Replace correct nexus url 
-        sh "cd ${parksmap}; ${parksmapMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.e4ff.pro-eu-west-1.openshiftapps.com/repository/releases"
+        sh "cd ${parksmap}; ${parksmapMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.apps.35.229.52.249.nip.io/repository/releases"
     }
 
     stage('Build OpenShift Image in development ') {
