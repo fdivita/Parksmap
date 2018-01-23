@@ -118,7 +118,7 @@ node('maven') {
     def active = ""
     stage('Deploy to Pre-Production with Blue/Green ') {
     
-        sh "oc project prod-ev"
+        sh "oc project prod-env"
         sh "oc get route nationalparks -n prod-env -o jsonpath='{ .spec.to.name }' > activesvc.txt"
         active = readFile('activesvc.txt').trim()
         if (active == "nationalparks-green") {
