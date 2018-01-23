@@ -42,7 +42,7 @@ node('maven') {
             'Code Analysis': {
                 echo "Code Analysis"
                 //PUT THE CORRECT SONARQUBE URL 
-                sh "cd ${nationalparks}; ${nationalparksMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.192.168.99.100.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"   
+                sh "cd ${nationalparks}; ${nationalparksMvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.apps.35.229.52.249.nip.io  -Dsonar.projectName=${JOB_BASE_NAME}"   
 
             }
       )
@@ -53,7 +53,7 @@ node('maven') {
         echo "Publish to Nexus"
 
         // Replace correct nexus url 
-        sh "cd ${nationalparks}; ${nationalparksMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.192.168.99.100.nip.io/repository/releases"
+        sh "cd ${nationalparks}; ${nationalparksMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.apps.35.229.52.249.nip.io/repository/releases/repository/releases"
     }
 
     stage('Build OpenShift Image in development ') {
@@ -91,24 +91,24 @@ node('maven') {
     def newTag = "TestReady-${version}"
     echo "New Tag: ${newTag}"
     
-    sh "oc project test"
-    sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n test"
-    openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
+    sh "oc project test-env"
+    sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n test-env"
+    openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
 
-    sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"nationalparks:TestReady-$version\"}}}]}}' -n test"
+    sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"nationalparks:TestReady-$version\"}}}]}}' -n test-env"
 
 
 
     
     
-    openshiftDeploy depCfg: 'nationalparks', namespace: 'test', verbose: 'false', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyDeployment depCfg: 'nationalparks', namespace: 'test', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyService namespace: 'test', svcName: 'nationalparks', verbose: 'false'
+    openshiftDeploy depCfg: 'nationalparks', namespace: 'test-env', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyDeployment depCfg: 'nationalparks', namespace: 'test-env', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyService namespace: 'test-env', svcName: 'nationalparks', verbose: 'false'
 
 
     newTag = "ProdReady-${nationalparks}"
     echo "New Tag: ${newTag}"
-    openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test', namespace: 'test', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
+    openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
 
 
   }
@@ -118,8 +118,8 @@ node('maven') {
     def active = ""
     stage('Deploy to Pre-Production with Blue/Green ') {
     
-        sh "oc project production"
-        sh "oc get route nationalparks -n production -o jsonpath='{ .spec.to.name }' > activesvc.txt"
+        sh "oc project prod-ev"
+        sh "oc get route nationalparks -n prod-env -o jsonpath='{ .spec.to.name }' > activesvc.txt"
         active = readFile('activesvc.txt').trim()
         if (active == "nationalparks-green") {
       dest = "nationalparks-blue"
@@ -135,11 +135,11 @@ stage('Deploy new Version') {
     // Patch the DeploymentConfig so that it points to
     // the latest ProdReady-${version} Image.
     
-    sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"parksmap-web:ProdReady-$version\"}}}]}}' -n production"
+    sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"parksmap-web:ProdReady-$version\"}}}]}}' -n prod-env"
 
-    openshiftDeploy depCfg: dest, namespace: 'production', verbose: 'false', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyDeployment depCfg: dest, namespace: 'production', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
-    openshiftVerifyService namespace: 'production', svcName: dest, verbose: 'false'
+    openshiftDeploy depCfg: dest, namespace: 'prod-env', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyDeployment depCfg: dest, namespace: 'prod-env', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
+    openshiftVerifyService namespace: 'prod-env', svcName: dest, verbose: 'false'
   }
 
 
@@ -147,8 +147,8 @@ stage('Deploy new Version') {
     input "Switch Production?"
 
     
-    sh 'oc patch route nationalparks -n production -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
-    sh 'oc get route nationalparks -n production > oc_out.txt'
+    sh 'oc patch route nationalparks -n prod-env -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
+    sh 'oc get route nationalparks -n prod-env > oc_out.txt'
     oc_out = readFile('oc_out.txt')
     echo "Current route configuration: " + oc_out
   }
