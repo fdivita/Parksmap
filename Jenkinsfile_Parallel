@@ -96,7 +96,7 @@ node('maven') {
     
     sh "oc project test-env"
     sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n test-env"
-    sh "oc patch dc parksmap-web --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"parksmap-web\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test\", \"name\": \"parksmap-web:TestReady-$parksmapversion\"}}}]}}' -n test"
+    sh "oc patch dc parksmap-web --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"parksmap-web\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"parksmap-web:TestReady-$parksmapversion\"}}}]}}' -n test-env"
 
 
     openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
