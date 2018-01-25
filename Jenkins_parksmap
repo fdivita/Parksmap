@@ -73,7 +73,7 @@ node('maven') {
         sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n development"
 
         
-        sh "oc get bc/parksmap-web -n deveopment --template='{{ .status.lastVersion }}' > version.txt"
+        sh "oc get bc/parksmap-web -n development --template='{{ .status.lastVersion }}' > version.txt"
         build = readFile('version.txt').trim()
         echo "Last build number ${build}"
         def newTag = "TestReady-${parksmapversion}-${build}"
