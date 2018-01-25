@@ -88,14 +88,22 @@ node('maven') {
 
 
 
-  stage('Integration Test') {
+  stage('Parksmap Integration Test') {
     // Integration test-------------
     //if ok allora tag Prod Ready
-    def newTag = "TestReady-${parksmapversion}"
-    echo "New Tag: ${newTag}"
+    
+    def build  
+    
     
     sh "oc project test-env"
     sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n test-env"
+    
+
+    sh "oc get bc/parksmap-web --template='{{ .status.lastVersion }}' > version.txt"
+    build = readFile('version.txt').trim()
+    echo "Last build number ${build}"
+    def newTag = "TestReady-${parksmapversion}-${build}"
+    echo "New Tag: ${newTag}"
     sh "oc patch dc parksmap-web --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"parksmap-web\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"parksmap-web:TestReady-$parksmapversion\"}}}]}}' -n test-env"
 
 
