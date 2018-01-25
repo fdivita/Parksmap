@@ -57,8 +57,7 @@ node('maven') {
     }
 
     stage('Build OpenShift Image in development ') {
-        def newTag = "TestReady-${version}"
-        echo "New Tag: ${newTag}"
+        
 
         // Copy the jar file we just built and rename to jar.war
         sh "cd ${nationalparks};cp ./target/nationalparks.jar ./ROOT.jar"
@@ -68,6 +67,13 @@ node('maven') {
         sh "oc project development"
         sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n development"
 
+        sh "oc get bc/nationalparks -n development --template='{{ .status.lastVersion }}' > version.txt"
+        build = readFile('version.txt').trim()
+        echo "Last build number ${build}"
+        def newTag = "TestReady-${version}-${build}"
+        echo "New Tag: ${newTag}"
+
+
         openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'development', namespace: 'development', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
     }
 
@@ -76,7 +82,18 @@ node('maven') {
     // Patch the DeploymentConfig so that it points to the latest TestingCandidate-${version} Image.
     
     sh "oc project development"
-    sh "oc patch dc  nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"nationalparks:TestReady-$version\"}}}]}}' -n development"
+    
+    sh "oc get bc/nationalparks -n development --template='{{ .status.lastVersion }}' > version.txt"
+    build = readFile('version.txt').trim()
+    echo "Last build number ${build}"
+    def newTag = "TestReady-${version}-${build}"
+    echo "New Tag: ${newTag}"
+    
+    
+    sh "oc patch dc  nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"development\", \"name\": \"nationalparks:$newTag\"}}}]}}' -n development"
+
+
+
 
     openshiftDeploy depCfg: 'nationalparks', namespace: 'development', verbose: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyDeployment depCfg: 'nationalparks', namespace: 'development', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
@@ -88,14 +105,22 @@ node('maven') {
     stage('Integration Test') {
     // Integration test-------------
     //if ok allora tag Prod Ready
-    def newTag = "TestReady-${version}"
-    echo "New Tag: ${newTag}"
+    
     
     sh "oc project test-env"
     sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n test-env"
+    
+    
+    sh "oc get bc/parksmap-web --template='{{ .status.lastVersion }}' > version.txt"
+    
+    build = readFile('version.txt').trim()
+    echo "Last build number ${build}"
+    def newTag = "TestReady-${parksmapversion}-${build}"
+    echo "New Tag: ${newTag}"
+    
     openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
 
-    sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"nationalparks:TestReady-$version\"}}}]}}' -n test-env"
+    sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"nationalparks:$newTag\"}}}]}}' -n test-env"
 
 
 
@@ -106,7 +131,7 @@ node('maven') {
     openshiftVerifyService namespace: 'test-env', svcName: 'nationalparks', verbose: 'false'
 
 
-    newTag = "ProdReady-${nationalparks}"
+    newTag = "ProdReady-${nationalparks}-${build}"
     echo "New Tag: ${newTag}"
     openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
 
@@ -135,7 +160,16 @@ stage('Deploy new Version') {
     // Patch the DeploymentConfig so that it points to
     // the latest ProdReady-${version} Image.
     
-    sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"parksmap-web:ProdReady-$version\"}}}]}}' -n prod-env"
+
+
+    sh "oc get bc/parksmap-web -n test-env --template='{{ .status.lastVersion }}' > version.txt"
+    build = readFile('version.txt').trim()
+    echo "Last build number ${build}"
+    def newTag = "ProdReady-${parksmapversion}-${build}"
+    echo "New Tag: ${newTag}"
+
+        sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"parksmap-web:$newTag\"}}}]}}' -n prod-env"
+
 
     openshiftDeploy depCfg: dest, namespace: 'prod-env', verbose: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyDeployment depCfg: dest, namespace: 'prod-env', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'true', waitTime: '', waitUnit: 'sec'
@@ -152,10 +186,7 @@ stage('Deploy new Version') {
     oc_out = readFile('oc_out.txt')
     echo "Current route configuration: " + oc_out
   }
-
-
-
-     
+   
 }
 
 

@@ -108,7 +108,7 @@ node('maven') {
     // Integration test-------------
     //if ok allora tag Prod Ready
     
-    def build  
+    
     
     
     sh "oc project test-env"
@@ -119,7 +119,7 @@ node('maven') {
 
     sh "oc get bc/parksmap-web --template='{{ .status.lastVersion }}' > version.txt"
     
-    build = readFile('version.txt').trim()
+    def build = readFile('version.txt').trim()
     echo "Last build number ${build}"
     def newTag = "TestReady-${parksmapversion}-${build}"
     echo "New Tag: ${newTag}"
@@ -168,7 +168,7 @@ stage('Deploy new Version') {
     sh "oc get bc/parksmap-web -n test-env --template='{{ .status.lastVersion }}' > version.txt"
     build = readFile('version.txt').trim()
     echo "Last build number ${build}"
-    def newTag = "TestReady-${parksmapversion}-${build}"
+    def newTag = "ProdReady-${parksmapversion}-${build}"
     echo "New Tag: ${newTag}"
 
 
