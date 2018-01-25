@@ -61,7 +61,8 @@ node('maven') {
 
     stage('Build OpenShift Image in development ') {
         
-        echo "New Tag: ${newTag}"
+        def newTag
+        
 
         // Copy the jar file we just built and rename to jar.war
         sh "cd ${parksmap};cp ./target/parksmap-web.jar ./ROOT.jar"
