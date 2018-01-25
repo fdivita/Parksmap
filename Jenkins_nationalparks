@@ -162,13 +162,13 @@ stage('Deploy new Version') {
     
 
 
-    sh "oc get bc/parksmap-web -n test-env --template='{{ .status.lastVersion }}' > version.txt"
+    sh "oc get bc/nationalparks -n test-env --template='{{ .status.lastVersion }}' > version.txt"
     build = readFile('version.txt').trim()
     echo "Last build number ${build}"
     def newTag = "ProdReady-${version}-${build}"
     echo "New Tag: ${newTag}"
 
-        sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"parksmap-web:$newTag\"}}}]}}' -n prod-env"
+        sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"nationalparks:$newTag\"}}}]}}' -n prod-env"
 
 
     openshiftDeploy depCfg: dest, namespace: 'prod-env', verbose: 'false', waitTime: '', waitUnit: 'sec'
