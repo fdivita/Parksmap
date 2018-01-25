@@ -115,7 +115,7 @@ node('maven') {
     sh "oc get route nationalparks -n test-env --template \'{{ .spec.host }}') > route.txt"
 
     def nationalparks_route = readFile('route.txt').trim()
-    sh "curl -k ${nationalparks_route}/ws/data/load | grep -q "Items inserted in database: 2740"" 
+    sh "curl -k ${nationalparks_route}/ws/data/load | grep -q "Items inserted in database: 2740\"" 
 
     sh "oc get bc/nationalparks --template='{{ .status.lastVersion }}' > version.txt"
     build = readFile('version.txt').trim()
