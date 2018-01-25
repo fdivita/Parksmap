@@ -60,7 +60,7 @@ node('maven') {
     }
 
     stage('Build OpenShift Image in development ') {
-        def newTag = "TestReady-${parksmapversion}"
+        
         echo "New Tag: ${newTag}"
 
         // Copy the jar file we just built and rename to jar.war
@@ -70,6 +70,15 @@ node('maven') {
         
         sh "oc project development"
         sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n development"
+
+        
+        sh "oc get bc/parksmap-web -n deveopment --template='{{ .status.lastVersion }}' > version.txt"
+        build = readFile('version.txt').trim()
+        echo "Last build number ${build}"
+        def newTag = "TestReady-${parksmapversion}-${build}"
+        echo "New Tag: ${newTag}"
+
+
 
         openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'development', namespace: 'development', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
     }
