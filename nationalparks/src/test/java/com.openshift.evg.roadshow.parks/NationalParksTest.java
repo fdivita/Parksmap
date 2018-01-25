@@ -41,7 +41,7 @@ public class NationalParksTest{
     //Test BackendsController get to localhost:8080/
     public void test1() throws Exception {
         RequestBuilder requestBuilder = MockMvcRequestBuilders.get(
-                "/ws/healthz");
+                "/ws/healthz/");
         MvcResult result = mockMvc.perform(requestBuilder).andExpect(status().isOk()).andReturn();
         System.out.println("RESPONSE"+result.getResponse());
     }
