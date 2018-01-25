@@ -131,7 +131,7 @@ node('maven') {
     openshiftVerifyService namespace: 'test-env', svcName: 'nationalparks', verbose: 'false'
 
 
-    newTag = "ProdReady-${nationalparks}-${build}"
+    newTag = "ProdReady-${version}-${build}"
     echo "New Tag: ${newTag}"
     openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
 
