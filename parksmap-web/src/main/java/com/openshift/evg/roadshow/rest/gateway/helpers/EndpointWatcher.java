@@ -50,6 +50,8 @@ public class EndpointWatcher implements Watcher<Endpoints> {
 
 
     private boolean hasEndpoints(){
+        logger.info("Clients",client);
+
         return hasEndpoints(client.endpoints().inNamespace(namespace).withName(endpointName).get());
     }
     private boolean hasEndpoints(Endpoints endpoints){
