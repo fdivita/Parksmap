@@ -117,9 +117,8 @@ node('maven') {
     echo "CAlling parksmap-web route url "
     sh "curl -kv \$(oc get route parksmap-web -n test-env --template '{{ .spec.host }}')"
 
-
     sh "oc get bc/parksmap-web --template='{{ .status.lastVersion }}' > version.txt"
-    sh "curl -k (oc get route parksmap-web)"
+    
     build = readFile('version.txt').trim()
     echo "Last build number ${build}"
     def newTag = "TestReady-${parksmapversion}-${build}"
