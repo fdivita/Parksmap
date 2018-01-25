@@ -61,7 +61,7 @@ node('maven') {
 
     stage('Build OpenShift Image in development ') {
         
-        def newTag
+        
         
 
         // Copy the jar file we just built and rename to jar.war
