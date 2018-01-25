@@ -115,7 +115,7 @@ node('maven') {
     sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n test-env"
     
     echo "CAlling parksmap-web route url "
-    curl -kv $(oc get route parksmap-web -n test-env --template '{{ .spec.host }}')
+    sh "curl -kv $(oc get route parksmap-web -n test-env --template '{{ .spec.host }}')"
 
 
     sh "oc get bc/parksmap-web --template='{{ .status.lastVersion }}' > version.txt"
