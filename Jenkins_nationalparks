@@ -113,7 +113,7 @@ node('maven') {
     
     sh "oc get bc/nationalparks --template='{{ .status.lastVersion }}' > version.txt"
 
-    sh 'curl -k \$(oc get route nationalparks -n test-env --template '{{ .spec.host }}')/ws/data/load | grep -q \"Items inserted in database: 2740"'
+    sh 'curl -k \$(oc get route nationalparks -n test-env --template \'{{ .spec.host }}')/ws/data/load | grep -q \"Items inserted in database: 2740"'
 
 
     build = readFile('version.txt').trim()
