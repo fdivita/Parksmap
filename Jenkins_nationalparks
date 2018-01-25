@@ -111,11 +111,11 @@ node('maven') {
     sh "cd ${nationalparks};oc start-build nationalparks --follow --from-file=./ROOT.jar -n test-env"
     
     
-    sh "oc get bc/parksmap-web --template='{{ .status.lastVersion }}' > version.txt"
+    sh "oc get bc/nationalparks --template='{{ .status.lastVersion }}' > version.txt"
     
     build = readFile('version.txt').trim()
     echo "Last build number ${build}"
-    def newTag = "TestReady-${parksmapversion}-${build}"
+    def newTag = "TestReady-${version}-${build}"
     echo "New Tag: ${newTag}"
     
     openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
@@ -165,7 +165,7 @@ stage('Deploy new Version') {
     sh "oc get bc/parksmap-web -n test-env --template='{{ .status.lastVersion }}' > version.txt"
     build = readFile('version.txt').trim()
     echo "Last build number ${build}"
-    def newTag = "ProdReady-${parksmapversion}-${build}"
+    def newTag = "ProdReady-${version}-${build}"
     echo "New Tag: ${newTag}"
 
         sh "oc patch dc ${dest} --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"$dest\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"parksmap-web:$newTag\"}}}]}}' -n prod-env"
