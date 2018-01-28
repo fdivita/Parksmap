@@ -43,7 +43,7 @@ Nexus setup:  nexus-setup.sh contains all the required scripts to install Nexus 
 
 Jenkins setup: use the jenkins_setup.sh script. After deploying it , login into jenkins and import the two pipelines. Replace all the URL related to Gogs, Nexus and Sonarqube with the ones running in your openshift environment
 
-Openshift environment setup: openshift-setup.sh setup the three environments development , test-env , prod-env and the related parksmap-web and nationalparks application
+Openshift environment setup: openshift-setup.sh setups the three environments development , test-env , prod-env and the related parksmap-web and nationalparks applications
 
 
 
