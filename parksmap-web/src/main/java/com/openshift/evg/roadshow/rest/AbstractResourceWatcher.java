@@ -116,6 +116,7 @@ public abstract class AbstractResourceWatcher<T extends HasMetadata> implements 
             List<T> resources = listWatchedResources();
             for (T resource : resources) {
                 String resourceName = resource.getMetadata().getName();
+				logger.info("[INFO] ------------------ {}", resourceName);
                 EndpointWatcher endpointWatcher = endpointsWatchers.get(resourceName);
                 if (endpointWatcher == null) {
                     endpointWatcher = new EndpointWatcher(endpointRegistrar, client, currentNamespace, resourceName);

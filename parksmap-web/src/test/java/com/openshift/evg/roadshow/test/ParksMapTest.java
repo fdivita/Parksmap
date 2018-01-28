@@ -24,6 +24,8 @@ import com.openshift.evg.roadshow.rest.gateway.model.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(BackendsController.class)
+@WebMvcTest(Healthz.class)
+
 public class ParksMapTest{
 
 	@Autowired
