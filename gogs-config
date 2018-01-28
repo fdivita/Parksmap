@@ -1,0 +1,65 @@
+#Set up Gogs with these values:
+#Database Type: PostgreSQL
+#Host: postgresql:5432
+#User: gogs
+#Password: gogs
+#Database Name: gogs
+#Run User: gogs
+#Application URL: http://gogsroute (the gogsroute depends on your environment).
+#Click Install Gogs
+
+
+
+oc exec $(oc get pod | grep "^gogs" | awk '{print $1}') -- cat /opt/gogs/custom/conf/app.ini | more
+oc exec $(oc get pod | grep "^gogs" | awk '{print $1}') -- cat /opt/gogs/custom/conf/app.ini >app.ini
+oc create configmap gogs --from-file=app.ini
+oc set volume dc/gogs --add --overwrite --name=config-volume -m /opt/gogs/custom/conf/ -t configmap --configmap-name=gogs
+rm app.ini
+
+#Install the parksmap source code into Gogs:
+#In Gogs create an organization named CICDLabs.
+#Under the CICDLabs organization create a repository called openshift-tasks.
+#Clone the source code from GitHub and push it to Gogs:
+#Make sure to replace <gogs_user> and <gogs_password> with your credentials in this command:
+
+#Clone the source code from GitHub and push it to Gogs:
+#Make sure to replace <gogs_user> and <gogs_password> with your credentials in this command:
+#cd $HOME
+
+
+git clone https://github.com/wkulhanek/ParksMap.git
+cd $HOME/ParksMap
+git remote add gogs http://gogs:gogs@$(oc get route gogs -n xyz-gogs --template='{{ .spec.host }}')/CICDLabs/ParksMap.git
+git push -u gogs master
+
+
+#Set up nexus_settings.xml for local builds, making sure that <url> points to your specific Nexus URL:
+#<?xml version="1.0"?>
+#<settings>
+#  <mirrors>
+ #   <mirror>
+  #    <id>Nexus</id>
+   #   <name>Nexus Public Mirror</name>
+    #  <url>http://nexus3-nexus.192.168.99.100.nip.io/repository/maven-all-public/</url>
+     # <mirrorOf>*</mirrorOf>
+    #</mirror>
+  #</mirrors>
+  #<servers>
+  #<server>
+  #  <id>nexus</id>
+   # <username>admin</username>
+    #<password>admin123</password>
+  #</server>
+#</servers>
+#</settings>
+
+#add the nexus_settings.xml and nexus_openshift_settings.xml to local git 
+#git pull gogs master
+#git commit -m "Updated Settings" nexus_settings.xml nexus_openshift_settings.xml
+#git push gogs master
+
+mvn clean install -DskipTests=true -s ./nexus_settings.xml
+
+mvn test -s ./nexus_settings.xml
+
+mvn sonar:sonar -s ./nexus_settings.xml -Dsonar.host.url=http://$(oc get route sonarqube -n sonarqube --template='{{ .spec.host }}')
