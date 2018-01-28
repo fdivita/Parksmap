@@ -10,27 +10,26 @@ node('maven') {
 
   stage('Checkout Source Code') {
     // Get Source Code from SCM (Git) as configured in the Jenkins Project
-    // Next line for inline script, "checkout scm" for Jenkinsfile from Gogs
-    //git 'http://gogs-xyz-gogs.192.168.99.100.nip.io/CICDLabs/ParksMap.git'
+    
     echo "Checkout Source code for parksmap-web module" 
     checkout scm
   }
 
 
 
-  // The following variables need to be defined at the top level and not inside
-  // the scope of a stage - otherwise they would not be accessible from other stages.
-  // Extract version and other properties from the pom.xml
-  //def groupId    = getGroupIdFromPom("pom.xml")
-  //def artifactId = getArtifactIdFromPom("pom.xml")
+  
+  
+  //Extract RELEASE from pom.xml
   def parksmapversion    = getVersionFromPom("parksmap-web/pom.xml")
 
+  //Start build of parksmap jar   
   stage('Build parksmap-web jar') {
     echo "Building version ${parksmapversion}" 
+    
     sh "cd ${parksmap}; ${parksmapMvnCmd} clean package -DskipTests"
   }
 
-
+    //Run in parallel Unit Test and Code Analysis with SONARQUBE
   stage('Tests and Code Analysis') {
     
       parallel (
@@ -51,14 +50,15 @@ node('maven') {
     }
             
     
-
+    //Publish jar artifact on sonarqube
     stage('Publish to Nexus') {
         echo "Publish to Nexus"
 
-        // Replace correct nexus url 
         sh "cd ${parksmap}; ${parksmapMvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3-nexus.apps.35.229.52.249.nip.io/repository/releases"
     }
 
+    //Build parksmap Openshift image 
+    //Take the last build number and tag the image with RELEASE number and build number 
     stage('Build OpenShift Image in development ') {
         
         
@@ -68,7 +68,6 @@ node('maven') {
         sh "cd ${parksmap};cp ./target/parksmap-web.jar ./ROOT.jar"
 
         // Start Binary Build in OpenShift using the file we just published
-        
         sh "oc project development"
         sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n development"
 
@@ -80,10 +79,13 @@ node('maven') {
         echo "New Tag: ${newTag}"
 
 
-
+        //Tag the Openshift image 
         openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'development', namespace: 'development', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
     }
 
+    //
+    //Deploy the previously built image patching parksmap-web deployment configuration 
+    //The verify deployment and Service 
     stage('Deploy to Development') {
     // Patch the DeploymentConfig so that it points to the latest TestingCandidate-${version} Image.
     def build
@@ -103,7 +105,8 @@ node('maven') {
 
 
 
-
+    //Build the image in integration test 
+    //Deploy the TestReady tagged image , test it and and if ok tag the image as ProdReady
   stage('Parksmap Integration Test') {
     // Integration test-------------
     //if ok allora tag Prod Ready
@@ -114,9 +117,10 @@ node('maven') {
     sh "oc project test-env"
     sh "cd ${parksmap};oc start-build parksmap-web --follow --from-file=./ROOT.jar -n test-env"
     
-    echo "CAlling parksmap-web route url "
-    sh "curl -kv \$(oc get route parksmap-web -n test-env --template '{{ .spec.host }}')"
+    
 
+    
+    //Get last build Version 
     sh "oc get bc/parksmap-web --template='{{ .status.lastVersion }}' > version.txt"
     
     def build = readFile('version.txt').trim()
@@ -131,11 +135,18 @@ node('maven') {
     
     
     openshiftDeploy depCfg: 'parksmap-web', namespace: 'test-env', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    
+    //Integration Test 
+    echo "CAlling parksmap-web route url "
+    sh "curl -kv \$(oc get route parksmap-web -n test-env --template '{{ .spec.host }}')"
+    
+    
     openshiftVerifyDeployment depCfg: 'parksmap-web', namespace: 'test-env', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyService namespace: 'test-env', svcName: 'parksmap-web', verbose: 'false'
 
 
     newTag = "ProdReady-${parksmapversion}-${build}"
+    
     echo "New Tag: ${newTag}"
     openshiftTag alias: 'false', destStream: 'parksmap-web', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'parksmap-web', srcTag: 'latest', verbose: 'false'
 
@@ -146,8 +157,11 @@ node('maven') {
 def dest   = "parksmap-green"
 def active = ""
 
+
+//Deploy in Pre-Production with Blue/Green Stategies
 stage('Deploy to Pre-Production with Blue/Green ') {
     
+    //Get the exposed service in order to switch to the other one 
     sh "oc project prod-env"
     sh "oc get route parksmap-web -n prod-env -o jsonpath='{ .spec.to.name }' > activesvc.txt"
     active = readFile('activesvc.txt').trim()
@@ -159,6 +173,8 @@ stage('Deploy to Pre-Production with Blue/Green ') {
 
 }
 
+//Deploy the new image patching the nationalparks deployment config in prod-env
+//with the lastest ProdReady image 
 stage('Deploy new Version') {
     echo "Deploying to ${dest}"
 
@@ -180,10 +196,12 @@ stage('Deploy new Version') {
   }
 
 
+//Switch to the newer version of parksmap-web image 
+//Patch the route parksmap
 stage('Switch over to new Version') {
     input "Switch Production?"
 
-    
+    //P
     sh 'oc patch route parksmap-web -n prod-env -p \'{"spec":{"to":{"name":"' + dest + '"}}}\''
     sh 'oc get route parksmap-web -n prod-env > oc_out.txt'
     oc_out = readFile('oc_out.txt')
