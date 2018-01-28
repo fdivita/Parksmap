@@ -112,10 +112,7 @@ node('maven') {
     
     
     
-    sh "oc get route nationalparks -n test-env --template \'{{ .spec.host }}' > route.txt"
-
-    def nationalparks_route = readFile('route.txt').trim()
-    sh "curl -k ${nationalparks_route}/ws/data/load | grep -q \"Items inserted in database: 2740\"" 
+    
 
     sh "oc get bc/nationalparks --template='{{ .status.lastVersion }}' > version.txt"
     build = readFile('version.txt').trim()
@@ -124,14 +121,18 @@ node('maven') {
     echo "New Tag: ${newTag}"
     
     openshiftTag alias: 'false', destStream: 'nationalparks', destTag: newTag, destinationNamespace: 'test-env', namespace: 'test-env', srcStream: 'nationalparks', srcTag: 'latest', verbose: 'false'
-
+    
+    
     sh "oc patch dc nationalparks --patch '{\"spec\": { \"triggers\": [ { \"type\": \"ImageChange\", \"imageChangeParams\": { \"containerNames\": [ \"nationalparks\" ], \"from\": { \"kind\": \"ImageStreamTag\", \"namespace\": \"test-env\", \"name\": \"nationalparks:$newTag\"}}}]}}' -n test-env"
 
-
-
-    
-    
     openshiftDeploy depCfg: 'nationalparks', namespace: 'test-env', verbose: 'false', waitTime: '', waitUnit: 'sec'
+    
+    sh "oc get route nationalparks -n test-env --template \'{{ .spec.host }}' > route.txt"
+
+    //Integration Test 
+    def nationalparks_route = readFile('route.txt').trim()
+    sh "curl -k ${nationalparks_route}/ws/data/load | grep -q \"Items inserted in database: 2740\"" 
+
     openshiftVerifyDeployment depCfg: 'nationalparks', namespace: 'test-env', replicaCount: '1', verbose: 'false', verifyReplicaCount: 'false', waitTime: '', waitUnit: 'sec'
     openshiftVerifyService namespace: 'test-env', svcName: 'nationalparks', verbose: 'false'
 
