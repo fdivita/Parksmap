@@ -90,22 +90,22 @@ oc expose svc/parksmap-green --name parksmap-web
 //app template for development
 
 oc project development
-//Deploy mongo db
+//Deploy a mongo DB instance in the same project 
+
 oc new-build --binary=true --name="nationalparks" openshift/redhat-openjdk18-openshift:latest
 
 oc new-app development/nationalparks:TestingCandidate-1.0 --name=nationalparks --allow-missing-imagestream-tags=true
 
 oc set triggers dc/nationalparks --manual
-oc create configmap nationalparks --from-file=application.properties=./application-dev.properties
-oc set volumes dc/nationalparks --add -m /deployments/config --configmap-name=nationalparks
-oc expose dc nationalparks --port 8080
+
+
 
 
 //Dev probe
 oc set probe dc/nationalparks --liveness --failure-threshold 3 --initial-delay-seconds 20 --get-url=http://:8080/ws/healthz/
 oc set probe dc/nationalparks --readiness --get-url=http://:8080/ws/healthz/
 
-//Create configmap for Development
+//Create configmap for Development to externalize MongoDB connection parameter
 oc create configmap nationalparks --from-file=application.properties=./application-dev.properties
 oc set volumes dc/nationalparks --add -m /deployments/config --configmap-name=nationalparks
 oc expose svc nationalparks
